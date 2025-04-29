@@ -11,7 +11,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
     yoko, tate = True, True
-    if obj_rct.left < 0 or WIDTH < obj_rct.right:
+    if obj_rct.left < 0 or WIDTH < obj_rct.right: #ちゃんとWIDTH-100で弾消えます
         yoko = False
     if obj_rct.top < 0 or HEIGHT < obj_rct.bottom:
         tate = False
@@ -68,9 +68,8 @@ class Beam:
         self.vx, self.vy = +5, 0
 
     def update(self, screen: pg.Surface):
-        if check_bound(self.rct) == (True, True):
-            self.rct.move_ip(self.vx, self.vy)
-            screen.blit(self.img, self.rct)
+        self.rct.move_ip(self.vx, self.vy)
+        screen.blit(self.img, self.rct)
 
 class Bomb:
     def __init__(self, color: tuple[int, int, int], rad: int):
@@ -108,17 +107,18 @@ def main():
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200))
-    beam = None
+    beams = [] 
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
-    sc = Score()  # スコアクラスのインスタンス生成
+    sc = Score()
     clock = pg.time.Clock()
     tmr = 0
+
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                beam = Beam(bird)
+                beams.append(Beam(bird))
 
         screen.blit(bg_img, [0, 0])
 
@@ -127,27 +127,37 @@ def main():
                 bird.change_img(8, screen)
                 fonto = pg.font.Font(None, 80)
                 txt = fonto.render("Game Over", True, (255, 0, 0))
-                screen.blit(txt, [WIDTH//2-150, HEIGHT//2])
+                screen.blit(txt, [WIDTH//2 - 150, HEIGHT//2])
                 pg.display.update()
                 time.sleep(1)
                 return
 
-        for j, bomb in enumerate(bombs):
-            if beam is not None:
-                if beam.rct.colliderect(bomb.rct):
-                    beam = None
+        # ビームと爆弾の衝突判定
+        for beam in beams:
+            for j, bomb in enumerate(bombs):
+                if bomb is not None and beam.rct.colliderect(bomb.rct):
+                    beams.remove(beam)
                     bombs[j] = None
-                    sc.score += 1  # ★ スコア加算
+                    sc.score += 1
                     bird.change_img(6, screen)
-        bombs = [bomb for bomb in bombs if bomb is not None]
+                    break
+
+        bombs = [b for b in bombs if b is not None]
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
-        if beam is not None:
-            beam.update(screen)
+
+        new_beams = []
+        for beam in beams:
+            if check_bound(beam.rct) == (True, True):
+                beam.update(screen)
+                new_beams.append(beam)
+        beams = new_beams
+
         for bomb in bombs:
             bomb.update(screen)
-        sc.update(screen)  # ★ スコア描画
+
+        sc.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
@@ -157,3 +167,4 @@ if __name__ == "__main__":
     main()
     pg.quit()
     sys.exit()
+
