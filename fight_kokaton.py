@@ -19,6 +19,9 @@ def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
     return yoko, tate
 
 class Bird:
+    """
+    こうかとん本体
+    """
     delta = {
         pg.K_UP: (0, -5),
         pg.K_DOWN: (0, +5),
@@ -63,6 +66,9 @@ class Bird:
         screen.blit(self.img, self.rct)
 
 class Beam:
+    """
+    ビームクラス
+    """
     def __init__(self, bird: "Bird"):
         self.vx, self.vy = bird.dire
         if self.vx == 0 and self.vy == 0:
@@ -79,6 +85,9 @@ class Beam:
         screen.blit(self.img, self.rct)
 
 class Bomb:
+    """
+    爆弾クラス
+    """
     def __init__(self, color: tuple[int, int, int], rad: int):
         self.img = pg.Surface((2*rad, 2*rad))
         pg.draw.circle(self.img, color, (rad, rad), rad)
@@ -97,6 +106,9 @@ class Bomb:
         screen.blit(self.img, self.rct)
 
 class Score:
+    """
+    スコアクラス
+    """
     def __init__(self):
         self.fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
         self.color = (0, 0, 255)
@@ -138,7 +150,7 @@ def main():
                 time.sleep(1)
                 return
 
-        for beam in beams[:]:
+        for beam in beams:
             for j, bomb in enumerate(bombs):
                 if bomb is not None and beam.rct.colliderect(bomb.rct):
                     beams.remove(beam)
